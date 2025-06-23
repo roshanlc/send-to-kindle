@@ -1,0 +1,59 @@
+# Binaries
+/server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Output folders
+/bin/
+/build/
+/dist/
+/tmp/
+/tmp/main
+
+# Go stuff
+*.test
+*.out
+coverage.*
+
+# IDE/editor folders
+.vscode/
+.idea/
+*.swp
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Logs & debug
+*.log
+*.trace
+*.prof
+*.tmp
+
+# Config & secrets (you might want to version sample files instead)
+.env
+.env.*
+*.local.yaml
+*.env.local
+config.yaml
+!.env.example
+!config.example.yaml
+
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Test reports
+*.coverprofile
+*.testresult
+
+# Git Hooks or tools
+.githooks/
+.pre-commit-config.yaml
+
+
+# Optional: If using Air for hot reload
+.air.toml
