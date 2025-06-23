@@ -54,6 +54,7 @@ docker-compose.override.yml
 .githooks/
 .pre-commit-config.yaml
 
+/downloads
 
 # Optional: If using Air for hot reload
 .air.toml
