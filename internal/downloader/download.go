@@ -1,6 +1,7 @@
 package downloader
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -12,7 +13,7 @@ import (
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/google/uuid"
+	"github.com/roshanlc/send-to-kindle/internal/helper"
 	"resty.dev/v3"
 )
 
@@ -27,44 +28,46 @@ var (
 )
 
 // Process takes the url and attempts to download the file
-func Process(client *resty.Client, url string) error {
+func Process(ctx context.Context, client *resty.Client, url string) (context.Context, error) {
 	// 1. Check if the url is libgen ads site from which download link is to be extracted or it is download url itself
 	// 2. if libgen ads site, extract the download link
 	// 3. Proceed to download from the url
 	// 4. Save the file to a directory
 	if client == nil {
-		return NilRestyClientErr
+		return ctx, NilRestyClientErr
 	}
 
+	taskID := helper.GetIDFromContext(ctx).String()
 	downloadLink := url
 	if isAdsPage(url) {
-		slog.Info("Extracting download link from ads page: " + url)
+		slog.Info("Extracting download link from ads page:", slog.String("url", url), slog.String("taskID", taskID))
 		resp, err := client.R().Get(url)
 		if err != nil {
-			return err
+			return ctx, err
 		}
 
 		if resp.StatusCode() != http.StatusOK {
-			return fmt.Errorf("%w, got: %d", Non200StatusErr, resp.StatusCode())
+			return ctx, fmt.Errorf("%w, got: %d", Non200StatusErr, resp.StatusCode())
 		}
 
 		downloadLink, err = extractDownloadLink(resp)
 		if err != nil {
-			return err
+			return ctx, err
 		}
 	}
 
-	return downloadAndSave(client, downloadLink)
+	return downloadAndSave(ctx, client, downloadLink)
 }
 
 // downloadAndSave downloads a file form the provided link and saves it under
 // the downloads(read from env var during start) directory
-func downloadAndSave(client *resty.Client, url string) error {
+func downloadAndSave(ctx context.Context, client *resty.Client, url string) (context.Context, error) {
 	resp, err := client.R().Get(url)
 	if err != nil {
-		return err
+		return ctx, err
 	}
-	slog.Info("Downloaded file from url", slog.String("url", url))
+	taskID := helper.GetIDFromContext(ctx).String()
+	slog.Info("Downloaded file from url", slog.String("url", url), slog.String("taskID", taskID))
 
 	contentDisposition := resp.Header().Get("Content-Disposition")
 	var filename string
@@ -78,8 +81,7 @@ func downloadAndSave(client *resty.Client, url string) error {
 
 	// Fallback to use task ID
 	if filename == "" {
-		id := uuid.New()
-		filename = id.String() // TODO: use id as filename as fallback
+		filename = taskID // taskID as fallback name
 		t, _, _ := mime.ParseMediaType(resp.Header().Get("Content-Type"))
 		if t != "" {
 			exts, _ := mime.ExtensionsByType(t)
@@ -93,16 +95,17 @@ func downloadAndSave(client *resty.Client, url string) error {
 	out, err := os.Create(filePath)
 
 	if err != nil {
-		return fmt.Errorf("error while creating file, %w", err)
+		return ctx, fmt.Errorf("error while creating file, %w", err)
 	}
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		return fmt.Errorf("error while saving response, %w", err)
+		return ctx, fmt.Errorf("error while saving response, %w", err)
 	}
 
-	slog.Info("Saved file", slog.String("filepath", filePath))
-	return nil
+	slog.Info("Saved file", slog.String("filepath", filePath), slog.String("taskID", taskID))
+	newCtx := helper.NewContextWithFilePath(ctx, filePath)
+	return newCtx, nil
 }
 
 // isAdsPage checks if the given urls if an ads page (not advertisement, more like file description)

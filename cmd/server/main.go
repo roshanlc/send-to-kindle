@@ -6,7 +6,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"github.com/roshanlc/send-to-kindle/internal/downloader"
+	"github.com/roshanlc/send-to-kindle/internal/email"
+	"github.com/roshanlc/send-to-kindle/internal/helper"
 	"resty.dev/v3"
 )
 
@@ -20,9 +23,33 @@ func main() {
 	client := resty.New().
 		SetRetryCount(3).
 		SetTimeout(5 * time.Minute)
-	err := downloader.Process(client, testURL)
+
+	ctx := helper.GenerateIDWithContext()
+	ctx, err := downloader.Process(ctx, client, testURL)
 	if err != nil {
 		logger.Error(err.Error())
 	}
+
+	godotenv.Load(".env")
+	user := os.Getenv("USERID")
+	pw := os.Getenv("PASSWORD")
+
+	details := email.EmailDetails{
+		From:        "",
+		To:          "",
+		Host:        "",
+		Port:        587,
+		Subject:     "Hello",
+		Body:        "Receive this",
+		Username:    user,
+		Password:    pw,
+		Attachments: []string{helper.GetFilepathFromContext(ctx)},
+	}
+
+	err = email.Send(ctx, details)
+	if err != nil {
+		slog.Error(err.Error())
+	}
+
 	log.Println("Exiting...")
 }

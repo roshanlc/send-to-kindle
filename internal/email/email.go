@@ -1,10 +1,12 @@
 package email
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"strings"
 
+	"github.com/roshanlc/send-to-kindle/internal/helper"
 	"github.com/wneessen/go-mail"
 )
 
@@ -44,11 +46,12 @@ func (e *EmailDetails) verify() error {
 	return nil
 }
 
-func Send(details EmailDetails) error {
-	// TODO: add task id context or direct parameter
+func Send(ctx context.Context, details EmailDetails) error {
 	if err := details.verify(); err != nil {
 		return fmt.Errorf("error while validating email details: %w", err)
 	}
+
+	taskID := helper.GetIDFromContext(ctx).String()
 
 	msg := mail.NewMsg()
 	err := msg.From(details.From)
@@ -65,11 +68,15 @@ func Send(details EmailDetails) error {
 	msg.SetBodyString(mail.TypeTextPlain, details.Body)
 	if len(details.Attachments) > 0 {
 		for _, item := range details.Attachments {
-			msg.AttachFile(item)
+			if helper.IsFilepathValid(item) {
+				msg.AttachFile(item)
+			} else {
+				slog.Warn("Skipping this filepath due to invalidity", slog.String("filepath", item), slog.String("taskID", taskID))
+			}
 		}
 	}
 
-	slog.Info("Creating email client object")
+	slog.Info("Creating email client object", slog.String("taskID", taskID))
 	client, err := mail.NewClient(details.Host,
 		mail.WithPort(details.Port),
 		mail.WithTLSPolicy(mail.DefaultTLSPolicy),
@@ -82,14 +89,14 @@ func Send(details EmailDetails) error {
 		return fmt.Errorf("error while constructing email client, %w", err)
 	}
 
-	slog.Info("Attempting to send email")
+	slog.Info("Attempting to send email", slog.String("taskID", taskID))
 
 	// send the email
 	err = client.DialAndSend(msg)
 	if err != nil {
 		return fmt.Errorf("error while sending email, %w", err)
 	}
-	slog.Info("Email sent successfully")
+	slog.Info("Email sent successfully", slog.String("taskID", taskID))
 
 	return nil
 }
