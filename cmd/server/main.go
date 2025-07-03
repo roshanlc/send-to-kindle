@@ -1,16 +1,14 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
-	"time"
 
-	"github.com/joho/godotenv"
-	"github.com/roshanlc/send-to-kindle/internal/downloader"
-	"github.com/roshanlc/send-to-kindle/internal/email"
-	"github.com/roshanlc/send-to-kindle/internal/helper"
-	"resty.dev/v3"
+	"github.com/roshanlc/send-to-kindle/internal/database"
+	_ "modernc.org/sqlite"
 )
 
 const testURL = "https://libgen.li/ads.php?md5=7e5412b8ece1fe49f7bfbc6e5ab77809" // stray birds by Tagore
@@ -20,36 +18,50 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	client := resty.New().
-		SetRetryCount(3).
-		SetTimeout(5 * time.Minute)
-
-	ctx := helper.GenerateIDWithContext()
-	ctx, err := downloader.Process(ctx, client, testURL)
-	if err != nil {
-		logger.Error(err.Error())
-	}
-
-	godotenv.Load(".env")
-	user := os.Getenv("USERID")
-	pw := os.Getenv("PASSWORD")
-
-	details := email.EmailDetails{
-		From:        "",
-		To:          "",
-		Host:        "",
-		Port:        587,
-		Subject:     "Hello",
-		Body:        "Receive this",
-		Username:    user,
-		Password:    pw,
-		Attachments: []string{helper.GetFilepathFromContext(ctx)},
-	}
-
-	err = email.Send(ctx, details)
+	dbConn, err := sql.Open("sqlite", "./tmp/store.db")
 	if err != nil {
 		slog.Error(err.Error())
+	} else {
+		slog.Info("success at db connection")
+		fmt.Println(dbConn.Ping())
 	}
+	defer dbConn.Close()
+
+	db, err := database.New(dbConn)
+	if err != nil {
+		slog.Error(err.Error())
+		return
+	}
+
+	slog.Info("attempting to setup database")
+	err = db.Setup()
+	if err != nil {
+		slog.Error(err.Error())
+	} else {
+		slog.Info("completed setup database")
+
+	}
+
+	taskID := "sn90rn389dnd3893dn"
+	// fmt.Println(db.AddTask(database.Task{
+	// 	ID:    taskID,
+	// 	URL:   "Random.com",
+	// 	State: database.Ongoing,
+	// }))
+
+	t, err := db.GetTask(taskID)
+	fmt.Println(t, err)
+
+	fmt.Println("updating:->", db.UpdateTask(database.Task{
+		ID:       taskID,
+		URL:      "again.com",
+		State:    database.Completed,
+		ErrorMsg: "none",
+	}))
+
+	//
+	t, err = db.GetTask(taskID)
+	fmt.Println(t, err)
 
 	log.Println("Exiting...")
 }

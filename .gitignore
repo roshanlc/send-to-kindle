@@ -58,3 +58,6 @@ docker-compose.override.yml
 
 # Optional: If using Air for hot reload
 .air.toml
+
+# random notes
+useful.md 
