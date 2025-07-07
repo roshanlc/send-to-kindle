@@ -12,7 +12,7 @@ import (
 
 type EmailDetails struct {
 	From        string
-	To          string
+	To          []string
 	Host        string
 	Port        int
 	Subject     string
@@ -27,8 +27,8 @@ func (e *EmailDetails) verify() error {
 	switch {
 	case strings.TrimSpace(e.From) == "":
 		return fmt.Errorf("From field should not be empty")
-	case strings.TrimSpace(e.To) == "":
-		return fmt.Errorf("To field should not be empty")
+	case len(e.To) == 0:
+		return fmt.Errorf("To field should not be empty. Atleast one receiver is required.")
 	case strings.TrimSpace(e.Host) == "":
 		return fmt.Errorf("Host field should not be empty")
 	case e.Port == 0:
@@ -59,7 +59,7 @@ func Send(ctx context.Context, details EmailDetails) error {
 		return nil
 	}
 
-	err = msg.To(details.To)
+	err = msg.To(details.To...)
 	if err != nil {
 		return nil
 	}
