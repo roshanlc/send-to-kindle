@@ -13,13 +13,13 @@ const configPath = ".config/send-to-kindle/config.yaml" // from the home directo
 
 // Config holds details about program configuration
 type Config struct {
-	Host         string `yaml:"HOST"`
-	Port         int    `yaml:"PORT"`
-	From         string `yaml:"FROM"`
-	To           string `yaml:"TO"`
-	User         string `yaml:"USERID"`
-	Password     string `yaml:"PASSWORD"`
-	DownloadsDir string `yaml:"DOWNLOADSDIR"`
+	Host         string   `yaml:"HOST"`
+	Port         int      `yaml:"PORT"`
+	From         string   `yaml:"FROM"`
+	To           []string `yaml:"TO"`
+	User         string   `yaml:"USERID"`
+	Password     string   `yaml:"PASSWORD"`
+	DownloadsDir string   `yaml:"DOWNLOADSDIR"`
 }
 
 func main() {
