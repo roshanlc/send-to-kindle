@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"net/url"
 	"os"
 	"strings"
 
@@ -57,8 +58,12 @@ func IsFilepathValid(filepath string) bool {
 		return false
 	}
 
-	if _, err := os.Stat(filepath); err != nil {
-		return false
-	}
-	return true
+	_, err := os.Stat(filepath)
+	return err == nil
+}
+
+// IsURLValid check is provided url is valid
+func IsURLValid(rawURL string) bool {
+	_, err := url.ParseRequestURI(rawURL)
+	return err == nil
 }
