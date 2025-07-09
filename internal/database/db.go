@@ -15,7 +15,17 @@ state TEXT NOT NULL CHECK (state IN ('pending', 'ongoing', 'complete', 'failed')
 error_message TEXT DEFAULT NULL, -- Optional: error/log message
 added_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);`
+);
+
+CREATE TABLE IF NOT EXISTS users(
+id INTEGER PRIMARY KEY AUTOINCREMENT,
+name TEXT NOT NULL,
+email TEXT NOT NULL UNIQUE,
+password TEXT NOT NULL,
+smtp_to TEXT,
+added_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+`
 
 	// trigger to update the updated_at timestamp
 	triggerQuery = `CREATE TRIGGER IF NOT EXISTS trg_update_timestamp

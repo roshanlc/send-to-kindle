@@ -1,6 +1,8 @@
 package database
 
-import "time"
+import (
+	"time"
+)
 
 type TaskState string
 
@@ -20,4 +22,13 @@ type Task struct {
 	ErrorMsg  string    `json:"error_msg,omitempty"`
 	AddedAt   time.Time `json:"added_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type User struct {
+	ID       int       `json:"id"`
+	Name     string    `json:"name"`
+	Email    string    `json:"email"`
+	Password string    `json:"-"`
+	SmtpTo   []string  `json:"smtp_to"`
+	AddedAt  time.Time `json:"added_at"`
 }

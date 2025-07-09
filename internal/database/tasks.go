@@ -121,16 +121,15 @@ func (db *DB) DeleteTask(taskID string) error {
 		return err
 	}
 
-	r, err := result.RowsAffected()
-	if err != nil {
-		return nil
-	}
-
 	err = tx.Commit()
 	if err != nil {
 		return err
 	}
 
+	r, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
 	// check the count of rows affected
 	if r == 0 {
 		return ErrNoRowDeleted
