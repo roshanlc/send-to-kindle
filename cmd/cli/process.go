@@ -12,6 +12,7 @@ import (
 
 // process takes the url, downloads the file and emails it as an attachment
 func process(config *Config, url string) {
+	downloader.SetDownloadDirectory(config.DownloadsDir) // set the downloads directory
 	ctx := helper.GenerateIDWithContext()
 	slog.Info("trying to download file", slog.String("url", url), slog.Any("taskID", helper.GetIDFromContext(ctx)))
 

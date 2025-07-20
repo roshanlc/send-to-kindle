@@ -27,6 +27,11 @@ var (
 	NoLinkFoundAdsPageErr = errors.New("could not extract download link from ads page")
 )
 
+// SetDownloadDir sets the directory for saving the downloaded file
+func SetDownloadDirectory(dir string) {
+	downloadDir = dir
+}
+
 // Process takes the url and attempts to download the file
 func Process(ctx context.Context, client *resty.Client, url string) (context.Context, error) {
 	// 1. Check if the url is libgen ads site from which download link is to be extracted or it is download url itself
