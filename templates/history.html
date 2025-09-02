@@ -1,0 +1,23 @@
+<!-- history.html -->
+<table>
+  <thead>
+    <tr>
+      <th>TaskID</th>
+      <th>URL</th>
+      <th>Status</th>
+      <th>Added At</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{ range . }}
+    <tr>
+      <td>{{ .URL }}</td>
+      <td>{{ .Created.Format "2006-01-02 15:04:05" }}</td>
+    </tr>
+    {{ else }}
+    <tr>
+      <td colspan="2">No records</td>
+    </tr>
+    {{ end }}
+  </tbody>
+</table>

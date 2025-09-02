@@ -1,24 +1,53 @@
 package main
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"fmt"
+	"html/template"
 	"log"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"strconv"
 
+	"github.com/joho/godotenv"
+	"github.com/roshanlc/send-to-kindle/config"
 	"github.com/roshanlc/send-to-kindle/internal/database"
+	"github.com/roshanlc/send-to-kindle/internal/queue"
+	"github.com/roshanlc/send-to-kindle/internal/server"
 	_ "modernc.org/sqlite"
 )
 
 const testURL = "https://libgen.li/ads.php?md5=7e5412b8ece1fe49f7bfbc6e5ab77809" // stray birds by Tagore
-func main() {
 
+// server will use a single mail client and send from it to the clients
+// just display the email from which it will be sent
+
+var templates = template.Must(template.ParseGlob("templates/*.html"))
+
+const DBNAME = "kindle-server.db"
+
+func main() {
 	// setup logger
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
-	dbConn, err := sql.Open("sqlite", "./tmp/store.db")
+	// config setup
+	config, err := readConfig()
+	if err != nil {
+		slog.Error("error while reading config from .env", slog.String("error", err.Error()))
+		return
+	}
+
+	err = config.Verify()
+	if err != nil {
+		slog.Error("error while verifying config values", slog.String("error", err.Error()))
+		return
+	}
+
+	// database setup
+	dbConn, err := sql.Open("sqlite", filepath.Join(config.DBPath, DBNAME))
 	if err != nil {
 		slog.Error(err.Error())
 	} else {
@@ -42,26 +71,48 @@ func main() {
 
 	}
 
-	taskID := "sn90rn389dnd3893dn"
-	// fmt.Println(db.AddTask(database.Task{
-	// 	ID:    taskID,
-	// 	URL:   "Random.com",
-	// 	State: database.Ongoing,
-	// }))
+	key := make([]byte, 32)
+	_, err = rand.Read(key)
+	if err != nil {
+		slog.Error("error while generating random key", slog.String("error", err.Error()))
+		return
+	}
 
-	t, err := db.GetTask(taskID)
-	fmt.Println(t, err)
+	// start the server
+	svr := server.Server{
+		Config:    &config,
+		DB:        db,
+		Templates: templates,
+		TaskQueue: *queue.NewTaskQueue(),
+	}
 
-	fmt.Println("updating:->", db.UpdateTask(database.Task{
-		ID:       taskID,
-		URL:      "again.com",
-		State:    database.Completed,
-		ErrorMsg: "none",
-	}))
-
-	//
-	t, err = db.GetTask(taskID)
-	fmt.Println(t, err)
+	err = svr.Verify()
+	if err != nil {
+		slog.Error("error while setting up server", slog.String("error", err.Error()))
+		return
+	}
 
 	log.Println("Exiting...")
+}
+
+func readConfig() (config.ServerConfig, error) {
+	config := config.ServerConfig{}
+	err := godotenv.Load()
+	if err != nil {
+		return config, err
+	}
+
+	config.SmtpHost = os.Getenv("SMTPHOST")
+	smtpPort, err := strconv.Atoi(os.Getenv("SMTPPORT"))
+	if err != nil {
+		return config, err
+	}
+	config.SmtpPort = smtpPort
+	config.SmtpUserID = os.Getenv("USERID")
+	config.SmtpPassword = os.Getenv("PASSWORD")
+	config.SmtpFrom = os.Getenv("SMTPFROM")
+	config.ServerPort = os.Getenv("SERVERPORT")
+	config.DBPath = os.Getenv("DBPATH")
+
+	return config, nil
 }
