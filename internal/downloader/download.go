@@ -19,7 +19,7 @@ import (
 
 const adsTerm = "ads.php?"
 
-var downloadDir = "./downloads"
+var downloadDir = "./downloads" // should be configurable, take from .env file // Also add a cleanup logic cron
 
 var (
 	NilRestyClientErr     = errors.New("no resty clienty provided, expected a resty client reference")
