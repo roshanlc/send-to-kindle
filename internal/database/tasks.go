@@ -195,3 +195,50 @@ func (db *DB) UpdateTask(task Task) error {
 	}
 	return nil
 }
+
+// ListTask retrieve tasks from db
+func (db *DB) ListTask() ([]Task, error) {
+	query := `SELECT id,user_id,url,state,error_message,added_at,updated_at FROM tasks;`
+	result, err := db.Database.Query(query)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var tasks = make([]Task, 0, 20)
+
+	defer result.Close()
+
+	for result.Next() {
+		task := Task{}
+		var userID sql.NullInt32
+		var errMsg sql.NullString
+		var stateText string
+		err := result.Scan(
+			&task.ID,
+			&userID,
+			&task.URL,
+			&stateText,
+			&errMsg,
+			&task.AddedAt,
+			&task.UpdatedAt)
+
+		if err != nil {
+			return nil, err
+		}
+
+		task.State = TaskState(stateText)
+
+		if userID.Valid {
+			task.UserID = int(userID.Int32)
+		}
+
+		if errMsg.Valid {
+			task.ErrorMsg = errMsg.String
+		}
+
+		tasks = append(tasks, task)
+	}
+
+	return tasks, nil
+}
