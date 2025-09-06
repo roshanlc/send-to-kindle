@@ -11,6 +11,7 @@ const (
 id TEXT PRIMARY KEY,             -- UUIDv4, e.g., "f47ac10b-58cc-4372-a567-0e02b2c3d479"
 user_id INT,                    -- Nullable: for server-authenticated users
 url TEXT NOT NULL,               -- URL to download/process
+title TEXT,               -- book title
 state TEXT NOT NULL CHECK (state IN ('pending', 'ongoing', 'complete', 'failed')),
 error_message TEXT DEFAULT NULL, -- Optional: error/log message
 added_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

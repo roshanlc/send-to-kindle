@@ -18,6 +18,7 @@ type Task struct {
 	ID        string    `json:"id"`
 	UserID    int       `json:"user_id,omitempty"`
 	URL       string    `json:"url"`
+	Title     string    `json:"title"`
 	State     TaskState `json:"state"`
 	ErrorMsg  string    `json:"error_msg,omitempty"`
 	AddedAt   time.Time `json:"added_at"`

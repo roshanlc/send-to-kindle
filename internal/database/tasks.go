@@ -8,7 +8,7 @@ import (
 
 // GetTask retrieves a task
 func (db *DB) GetTask(taskID string) (Task, error) {
-	query := `SELECT user_id,url,state,error_message,added_at,updated_at FROM tasks WHERE id = ?;`
+	query := `SELECT user_id,url,title,state,error_message,added_at,updated_at FROM tasks WHERE id = ?;`
 	result := db.Database.QueryRow(query, taskID)
 
 	if err := result.Err(); err != nil {
@@ -19,10 +19,12 @@ func (db *DB) GetTask(taskID string) (Task, error) {
 		ID: taskID,
 	}
 	var userID sql.NullInt32
+	var title sql.NullString
 	var errMsg sql.NullString
 	var stateText string
 	err := result.Scan(&userID,
 		&task.URL,
+		&title,
 		&stateText,
 		&errMsg,
 		&task.AddedAt,
@@ -36,6 +38,10 @@ func (db *DB) GetTask(taskID string) (Task, error) {
 
 	if userID.Valid {
 		task.UserID = int(userID.Int32)
+	}
+
+	if title.Valid {
+		task.Title = title.String
 	}
 
 	if errMsg.Valid {
@@ -74,12 +80,18 @@ func (db *DB) AddTask(task Task) error {
 	}
 	defer tx.Rollback()
 
-	query := `INSERT INTO tasks(id, user_id, url, state, error_message) VALUES(?,?,?,?,?);`
+	query := `INSERT INTO tasks(id, user_id, url, title, state, error_message) VALUES(?,?,?,?,?,?);`
 	var userID sql.NullInt32
 	if task.UserID != 0 {
 		userID.Int32 = int32(task.UserID)
 		userID.Valid = true
 	}
+	var title sql.NullString
+	if task.Title != "" {
+		title.String = task.Title
+		title.Valid = true
+	}
+
 	var errMsg sql.NullString
 	if task.ErrorMsg != "" {
 		errMsg.String = task.ErrorMsg
@@ -90,6 +102,7 @@ func (db *DB) AddTask(task Task) error {
 		task.ID,
 		userID,
 		task.URL,
+		title,
 		string(task.State),
 		errMsg,
 	)
@@ -137,7 +150,7 @@ func (db *DB) DeleteTask(taskID string) error {
 	return nil
 }
 
-// UpdateTask updates a task row. Supports updating the state, URL and ErrorMessage of the task only.
+// UpdateTask updates a task row. Supports updating the state, title, URL and ErrorMessage of the task only.
 // Only provide value for the property to be updated. Keep them empty if field is not be updated.
 func (db *DB) UpdateTask(task Task) error {
 	if task.ID == "" {
@@ -162,6 +175,10 @@ func (db *DB) UpdateTask(task Task) error {
 	if task.State != "" {
 		queryParts = append(queryParts, "state = ?")
 		args = append(args, string(task.State))
+	}
+	if task.Title != "" {
+		queryParts = append(queryParts, "title = ?")
+		args = append(args, task.Title)
 	}
 	if task.URL != "" {
 		queryParts = append(queryParts, "url = ?")
@@ -197,9 +214,14 @@ func (db *DB) UpdateTask(task Task) error {
 }
 
 // ListTask retrieve tasks from db
-func (db *DB) ListTask() ([]Task, error) {
-	query := `SELECT id,user_id,url,state,error_message,added_at,updated_at FROM tasks ORDER BY added_at DESC;`
-	result, err := db.Database.Query(query)
+func (db *DB) ListTask(state TaskState) ([]Task, error) {
+	var query string
+	if state == "" {
+		query = `SELECT id,user_id,url,title,state,error_message,added_at,updated_at FROM tasks ORDER BY added_at DESC;`
+	} else {
+		query = `SELECT id,user_id,url,title,state,error_message,added_at,updated_at FROM tasks WHERE state = ? ORDER BY added_at DESC;`
+	}
+	result, err := db.Database.Query(query, state)
 
 	if err != nil {
 		return nil, err
@@ -212,12 +234,14 @@ func (db *DB) ListTask() ([]Task, error) {
 	for result.Next() {
 		task := Task{}
 		var userID sql.NullInt32
+		var title sql.NullString
 		var errMsg sql.NullString
 		var stateText string
 		err := result.Scan(
 			&task.ID,
 			&userID,
 			&task.URL,
+			&title,
 			&stateText,
 			&errMsg,
 			&task.AddedAt,
@@ -225,6 +249,10 @@ func (db *DB) ListTask() ([]Task, error) {
 
 		if err != nil {
 			return nil, err
+		}
+
+		if title.Valid {
+			task.Title = title.String
 		}
 
 		task.State = TaskState(stateText)

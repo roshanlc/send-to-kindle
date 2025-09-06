@@ -67,3 +67,8 @@ func IsURLValid(rawURL string) bool {
 	_, err := url.ParseRequestURI(rawURL)
 	return err == nil
 }
+
+// GetUUIDFromID tries to parse uuid from older uuid string value
+func GetUUIDFromID(id string) (uuid.UUID, error) {
+	return uuid.Parse(id)
+}

@@ -16,7 +16,7 @@ func (s *Server) TaskListHandler(w http.ResponseWriter, r *http.Request) {
 
 	var tasks []database.Task
 	// data from history
-	tasks, err := s.DB.ListTask()
+	tasks, err := s.DB.ListTask("")
 
 	if err != nil {
 		for _, t := range tasks {
@@ -79,7 +79,6 @@ func (s *Server) TaskAddHandler(w http.ResponseWriter, r *http.Request) {
 	// generate new id
 	taskID = helper.GenerateID()
 
-	fmt.Println("taskID", taskID.String())
 	// add to database
 	err = s.DB.AddTask(database.Task{
 		ID:    taskID.String(),  // id of the task
