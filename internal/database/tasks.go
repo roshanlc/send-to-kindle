@@ -198,7 +198,7 @@ func (db *DB) UpdateTask(task Task) error {
 
 // ListTask retrieve tasks from db
 func (db *DB) ListTask() ([]Task, error) {
-	query := `SELECT id,user_id,url,state,error_message,added_at,updated_at FROM tasks;`
+	query := `SELECT id,user_id,url,state,error_message,added_at,updated_at FROM tasks ORDER BY added_at DESC;`
 	result, err := db.Database.Query(query)
 
 	if err != nil {

@@ -7,6 +7,56 @@
   <link rel="icon" type="image/x-icon"
     href="https://raw.githubusercontent.com/roshanlc/roshanlc.github.io/master/static/favicon.ico">
   <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 1rem;
+      color: #333;
+    }
+
+    #url-input {
+      flex: 1;
+      padding: 0.6rem 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    #url-input:focus {
+      border-color: #04AA6D;
+      box-shadow: 0px 0px 6px rgba(4, 170, 109, 0.3);
+      outline: none;
+    }
+
+    /* Button */
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #7ac1d9;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #2e7f9a;
+    }
+
+    button svg {
+      stroke: white;
+      fill: white;
+    }
+    
+    #result-box{
+      padding-top: -1rem;
+    }
+    
     .container {
       display: grid;
       grid-template-columns: 1fr;

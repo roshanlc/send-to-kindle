@@ -18,8 +18,6 @@ func (s *Server) TaskListHandler(w http.ResponseWriter, r *http.Request) {
 	// data from history
 	tasks, err := s.DB.ListTask()
 
-	fmt.Println(tasks, err) // TODO: remove this later
-
 	if err != nil {
 		for _, t := range tasks {
 			fmt.Println(t)

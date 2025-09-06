@@ -1,5 +1,5 @@
 <form hx-post="/submit" hx-target="#result-box" hx-swap="innerHTML"
-  hx-on::after-request="htmx.ajax('GET', '/history', {target:'#history-table'})" method="post">
+  hx-on::after-request="this.reset(); htmx.ajax('GET', '/history', {target:'#history-table'})" method="post">
   <div class="submit-div">
   <input type="url" name="url" id="url-input" required pattern="https?://.+" placeholder="Enter a valid URL (http:// or https://)"
     hx-validate="true">
