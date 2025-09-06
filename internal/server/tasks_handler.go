@@ -62,44 +62,51 @@ func (s *Server) TaskAddHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: also verify url thoroughly
 
-	if !helper.IsURLValid(url) {
-		errMsg = "URL input should not be empty."
-		isValid = false
-		values["isValid"] = isValid
-		values["error"] = errMsg
-		w.WriteHeader(http.StatusBadRequest)
-		s.execSubmitResponse(values, w, r)
-		return
+	urls := strings.Split(url, ",")
+	tIDs := make([]string, 0, len(urls))
+
+	for _, u := range urls {
+		u := strings.TrimSpace(u)
+		if !helper.IsURLValid(u) {
+			errMsg = "URL input should be valid."
+			isValid = false
+			values["isValid"] = isValid
+			values["error"] = errMsg
+			w.WriteHeader(http.StatusBadRequest)
+			s.execSubmitResponse(values, w, r)
+			return
+		}
+
+		// task additon to db and then to queue
+
+		// generate new id
+		taskID = helper.GenerateID()
+
+		// add to database
+		err = s.DB.AddTask(database.Task{
+			ID:    taskID.String(),  // id of the task
+			URL:   u,                // url of task
+			State: database.Ongoing, // state of task
+		})
+
+		var task queue.Task
+		if err != nil {
+			isValid = false
+			slog.Error("error while adding task to db", slog.String("error", err.Error()))
+			w.WriteHeader(http.StatusInternalServerError)
+			values["isValid"] = isValid
+			values["error"] = errMsg
+			s.execSubmitResponse(values, w, r)
+			continue
+		}
+		task = queue.NewTask(taskID, u)
+		// enqueue the task
+		s.TaskQueue.Enqueue(task)
+		tIDs = append(tIDs, taskID.String())
 	}
-
-	// task additon to db and then to queue
-
-	// generate new id
-	taskID = helper.GenerateID()
-
-	// add to database
-	err = s.DB.AddTask(database.Task{
-		ID:    taskID.String(),  // id of the task
-		URL:   url,              // url of task
-		State: database.Ongoing, // state of task
-	})
-
-	var task queue.Task
-	if err != nil {
-		isValid = false
-		slog.Error("error while adding task to db", slog.String("error", err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
-		values["isValid"] = isValid
-		values["error"] = errMsg
-		s.execSubmitResponse(values, w, r)
-		return
-	}
-	task = queue.NewTask(taskID, url)
-	// enqueue the task
-	s.TaskQueue.Enqueue(task)
 	values["isValid"] = isValid
 	values["error"] = errMsg
-	values["taskID"] = taskID
+	values["taskID"] = tIDs
 	w.WriteHeader(http.StatusOK)
 	s.execSubmitResponse(values, w, r)
 }

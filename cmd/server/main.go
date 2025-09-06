@@ -50,7 +50,7 @@ func main() {
 	}
 
 	// database setup
-	dbConn, err := sql.Open("sqlite", filepath.Join(config.DBPath, DBNAME))
+	dbConn, err := sql.Open("sqlite", fmt.Sprint(filepath.Join(config.DBPath, DBNAME), "?_busy_timeout=5000&_journal_mode=WAL"))
 	if err != nil {
 		slog.Error(err.Error())
 	} else {
