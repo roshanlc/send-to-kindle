@@ -129,7 +129,7 @@
     </div>
     <div class="history">
       <h2>History</h2>
-      <div id="history-table" hx-get="/history" hx-trigger="load" hx-swap="innerHTML">
+      <div id="history-table" hx-get="/history" hx-trigger="load, every 10s" hx-swap="innerHTML">
       </div>
     </div>
   </div>

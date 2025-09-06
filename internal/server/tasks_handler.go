@@ -1,9 +1,9 @@
 package server
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/roshanlc/send-to-kindle/internal/database"
@@ -19,9 +19,7 @@ func (s *Server) TaskListHandler(w http.ResponseWriter, r *http.Request) {
 	tasks, err := s.DB.ListTask("")
 
 	if err != nil {
-		for _, t := range tasks {
-			fmt.Println(t)
-		}
+		slog.Error("error while fetching tasks list", slog.String("error", err.Error()))
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -51,7 +49,7 @@ func (s *Server) TaskAddHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url := r.Form.Get("url")
+	url := strings.TrimSpace(r.Form.Get("url"))
 	if url == "" {
 		errMsg = "URL input should not be empty."
 		isValid = false

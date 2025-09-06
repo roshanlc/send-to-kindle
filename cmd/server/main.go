@@ -15,6 +15,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/roshanlc/send-to-kindle/config"
 	"github.com/roshanlc/send-to-kindle/internal/database"
+	"github.com/roshanlc/send-to-kindle/internal/downloader"
+	"github.com/roshanlc/send-to-kindle/internal/helper"
 	"github.com/roshanlc/send-to-kindle/internal/queue"
 	"github.com/roshanlc/send-to-kindle/internal/server"
 	_ "modernc.org/sqlite"
@@ -95,6 +97,26 @@ func main() {
 		return
 	}
 
+	// set download directory
+	downloader.SetDownloadDirectory(config.STOREPATH)
+
+	// fetch ongoing tasks from db and add to queue (remaining ones from last run)
+	tasks, err := db.ListTask(database.Ongoing)
+	if err != nil {
+		slog.Error("error while fetching ongoing tasks from db", slog.String("error", err.Error()))
+		slog.Warn("skipping adding leftover tasks due to error")
+	} else {
+		fmt.Println("leftover tasks:", tasks)
+	}
+
+	for _, t := range tasks {
+		u, err := helper.GetUUIDFromID(t.ID)
+		if err == nil {
+			ta := queue.NewTask(u, t.URL)
+			q.Enqueue(ta)
+		}
+	}
+
 	// run in waitgroup
 
 	var wg sync.WaitGroup
@@ -133,6 +155,8 @@ func readConfig() (config.ServerConfig, error) {
 	config.SmtpFrom = os.Getenv("SMTPFROM")
 	config.ServerPort = os.Getenv("SERVERPORT")
 	config.DBPath = os.Getenv("DBPATH")
+	config.STOREPATH = os.Getenv("STOREPATH")
+
 	to := os.Getenv("SMTPTO")
 	var emails []string
 	if to != "" {

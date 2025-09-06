@@ -28,14 +28,6 @@ var Pages = map[string]string{
 	"SubmitResultPage": "submit-result.html",
 }
 
-/*
-	// TODO: remove this later
-
-dashboard-base.html
-history.html
-submit-form.html
-submit-result.html
-*/
 const (
 	InternalServerError = "Something went wrong. Please try again later."
 )

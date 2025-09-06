@@ -4,6 +4,7 @@
     <tr>
       <th>Task ID</th>
       <th>URL</th>
+      <th>Title</th>
       <th>Status</th>
       <th>Added At</th>
     </tr>
@@ -13,12 +14,13 @@
     <tr>
       <td>{{.ID}}</td>
       <td>{{ .URL }}</td>
+      <td>{{ .Title }}</td>
       <td>{{ .State }}</td>
       <td>{{ .AddedAt.Format "2006-01-02 15:04:05" }}</td>
     </tr>
     {{ else }}
     <tr>
-      <td colspan="4">No records</td>
+      <td colspan="5">No records</td>
     </tr>
     {{ end }}
   </tbody>
