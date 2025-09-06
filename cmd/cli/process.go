@@ -20,13 +20,13 @@ func process(config *Config, url string) {
 		SetRetryCount(3).
 		SetTimeout(5 * time.Minute)
 
-	ctx, err := downloader.Process(ctx, client, url)
+	filename, ctx, err := downloader.Process(ctx, client, url)
 	if err != nil {
 		slog.Error("process failed", slog.String("error", err.Error()))
 		return
 	}
 
-	slog.Info("attempting to email downloaded file", slog.Any("taskID", helper.GetIDFromContext(ctx)))
+	slog.Info("attempting to email downloaded file:- "+filename, slog.Any("taskID", helper.GetIDFromContext(ctx)))
 
 	details := email.EmailDetails{
 		From:        config.From,
