@@ -9,7 +9,7 @@ import (
 func (s *Server) HomeHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	err := s.Templates.ExecuteTemplate(w, Pages["HomePage"], map[string]any{
-		// values go here (key : val)
+		"SendTo": s.Config.SmtpTo,
 	})
 	if err != nil {
 		slog.Error("error while excuting home template", slog.String("error", err.Error()))

@@ -72,6 +72,7 @@ func (s *Server) setupRouter() {
 	mux.HandleFunc("GET /", s.HomeHandler)
 	mux.HandleFunc("GET /history", s.TaskListHandler)
 	mux.HandleFunc("POST /submit", s.TaskAddHandler)
+	mux.HandleFunc("DELETE /history/clear", s.TaskRemoveCompletedHandler)
 
 	s.mux = mux
 }

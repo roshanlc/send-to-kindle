@@ -119,3 +119,17 @@ func (s *Server) execSubmitResponse(values map[string]any, w http.ResponseWriter
 		return
 	}
 }
+
+// TaskAddHandler removes completed tasks from history
+func (s *Server) TaskRemoveCompletedHandler(w http.ResponseWriter, r *http.Request) {
+	err := s.DB.DeleteCompletedTasks()
+	if err != nil {
+		slog.Error("error while deleting completed tasks", slog.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("error while deleting completed tasks."))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Task executed successfully."))
+}

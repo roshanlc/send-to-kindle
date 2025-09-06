@@ -6,6 +6,7 @@
   <title>HTMX Dashboard</title>
   <link rel="icon" type="image/x-icon"
     href="https://raw.githubusercontent.com/roshanlc/roshanlc.github.io/master/static/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -15,13 +16,39 @@
       color: #333;
     }
 
+    .container {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto;
+      row-gap: 2rem;
+      grid-template-areas:
+        "submit"
+        "history";
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    /* Submit section */
+    .submit {
+      grid-area: submit;
+    }
+
+    .submit-div {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      /* ✅ allow wrapping on smaller screens */
+    }
+
     #url-input {
       flex: 1;
+      min-width: 200px;
       padding: 0.6rem 1rem;
       border: 1px solid #ccc;
       border-radius: 8px;
       font-size: 1rem;
       transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      box-sizing: border-box;
     }
 
     #url-input:focus {
@@ -42,6 +69,8 @@
       padding: 0.5rem 1rem;
       cursor: pointer;
       transition: background 0.3s ease;
+      flex-shrink: 0;
+      /* ✅ don’t shrink on narrow screens */
     }
 
     button:hover {
@@ -52,44 +81,24 @@
       stroke: white;
       fill: white;
     }
-    
-    #result-box{
-      padding-top: -1rem;
-    }
-    
-    .container {
-      display: grid;
-      grid-template-columns: 1fr;
-      grid-template-rows: auto auto;
-      row-gap: 3rem;
-      grid-template-areas:
-        "submit"
-        "history";
+
+    #result-box {
+      margin-top: 1rem;
     }
 
+    /* History section */
     .history {
       grid-area: history;
-    }
-
-    .submit {
-      grid-area: submit;
-      height: 1.5rem;
-    }
-
-    #url-input {
-      height: 1.75rem;
-      width: 50rem;
-    }
-
-    .submit-div {
-      display: flex;
-      gap: 1rem;
+      overflow-x: auto;
+      /* ✅ table scrolls on small screens */
     }
 
     table {
       font-family: Arial, Helvetica, sans-serif;
       border-collapse: collapse;
       width: 100%;
+      min-width: 500px;
+      /* ✅ prevents squishing too much */
     }
 
     td,
@@ -107,19 +116,69 @@
     }
 
     th {
-      padding-top: 12px;
-      padding-bottom: 12px;
+      padding: 12px 8px;
       text-align: left;
       background-color: #04AA6D;
       color: white;
     }
+
+    /* ✅ Responsive tweaks */
+    @media (max-width: 768px) {
+      #url-input {
+        width: 100%;
+        /* full width on mobile/tablet */
+      }
+
+      .submit-div {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      button {
+        width: 100%;
+        /* button takes full row */
+      }
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin: 1.5rem 0;
+      padding: 2px;
+      /* color: #04AA6D; */
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .history-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    #clear-history-btn {
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    #clear-history-btn:hover {
+      background: #c0392b;
+    }
   </style>
+
   <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"></script>
 </head>
 
 <body>
 
-  <h1>Dashboard</h1>
+  <h1>Send-to-Kindle</h1>
   <div class="container">
     <div class="submit">
       <section id="form-section">
@@ -128,11 +187,18 @@
       <div id="result-box"></div>
     </div>
     <div class="history">
-      <h2>History</h2>
+      <div class="history-header">
+        <h2>History</h2>
+        <button id="clear-history-btn" hx-delete="/history/clear" hx-target="#result-box" hx-swap="innerHTML"
+          hx-confirm="Are you sure you want to clear all history?"
+          hx-on::after-request="htmx.ajax('GET', '/history', {target:'#history-table'})">
+          Clear History
+        </button>
+      </div>
       <div id="history-table" hx-get="/history" hx-trigger="load, every 10s" hx-swap="innerHTML">
       </div>
+      <p>Receipients: {{.SendTo}}</p>
     </div>
-  </div>
 
 </body>
 

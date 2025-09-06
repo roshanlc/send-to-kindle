@@ -270,3 +270,26 @@ func (db *DB) ListTask(state TaskState) ([]Task, error) {
 
 	return tasks, nil
 }
+
+// DeleteTask deletes completed tasks
+func (db *DB) DeleteCompletedTasks() error {
+	tx, err := db.Database.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	query := `DELETE FROM tasks WHERE state = ?;`
+	_, err = tx.Exec(query, Completed)
+
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
