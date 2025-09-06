@@ -1,8 +1,8 @@
 <!-- history.html -->
-<table>
+<table id="history-table">
   <thead>
     <tr>
-      <th>TaskID</th>
+      <th>Task ID</th>
       <th>URL</th>
       <th>Status</th>
       <th>Added At</th>
@@ -11,12 +11,14 @@
   <tbody>
     {{ range . }}
     <tr>
+      <td>{{.ID}}</td>
       <td>{{ .URL }}</td>
-      <td>{{ .Created.Format "2006-01-02 15:04:05" }}</td>
+      <td>{{ .State }}</td>
+      <td>{{ .AddedAt.Format "2006-01-02 15:04:05" }}</td>
     </tr>
     {{ else }}
     <tr>
-      <td colspan="2">No records</td>
+      <td colspan="4">No records</td>
     </tr>
     {{ end }}
   </tbody>

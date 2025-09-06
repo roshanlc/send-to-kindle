@@ -1,6 +1,8 @@
 <form hx-post="/submit" hx-target="#result-box" hx-swap="innerHTML"
   hx-on::after-request="htmx.ajax('GET', '/history', {target:'#history-table'})" method="post">
-  <input type="text" name="url" placeholder="Enter URL">
+  <div class="submit-div">
+  <input type="url" name="url" id="url-input" required pattern="https?://.+" placeholder="Enter a valid URL (http:// or https://)"
+    hx-validate="true">
   <button type="submit">
     <svg width="3rem" height="1.5rem" viewBox="0 -12 158 158" fill="none" xmlns="http://www.w3.org/2000/svg"
       transform="rotate(0)matrix(1, 0, 0, 1, 0, 0)" stroke="#000000" stroke-width="0.0015800000000000002">
@@ -19,5 +21,7 @@
         </defs>
       </g>
     </svg>
+  </form>
+  <div>
   </button>
 </form>

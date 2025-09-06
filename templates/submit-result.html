@@ -1,7 +1,7 @@
 <p>
   {{ if .isValid }}
-  Task Submitted successfully.
+  Task submitted successfully with task ID {{.taskID}}
   {{ else }}
-  Task submission failed. (Error will be displayed here!!!)
+  Task submission failed. {{.error}}
   {{ end }}
 </p>
