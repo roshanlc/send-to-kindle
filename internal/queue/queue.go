@@ -47,3 +47,8 @@ func (t *TaskQueue) Dequeue() Task {
 	t.queue = t.queue[1:]
 	return task
 }
+
+// NewTask creates a task entity
+func NewTask(id uuid.UUID, url string) Task {
+	return Task{ID: id, URL: url}
+}
