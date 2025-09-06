@@ -33,13 +33,13 @@ func SetDownloadDirectory(dir string) {
 }
 
 // Process takes the url and attempts to download the file
-func Process(ctx context.Context, client *resty.Client, url string) (context.Context, error) {
+func Process(ctx context.Context, client *resty.Client, url string) (string, context.Context, error) {
 	// 1. Check if the url is libgen ads site from which download link is to be extracted or it is download url itself
 	// 2. if libgen ads site, extract the download link
 	// 3. Proceed to download from the url
 	// 4. Save the file to a directory
 	if client == nil {
-		return ctx, NilRestyClientErr
+		return "", ctx, NilRestyClientErr
 	}
 
 	taskID := helper.GetIDFromContext(ctx).String()
@@ -48,16 +48,16 @@ func Process(ctx context.Context, client *resty.Client, url string) (context.Con
 		slog.Info("Extracting download link from ads page:", slog.String("url", url), slog.String("taskID", taskID))
 		resp, err := client.R().Get(url)
 		if err != nil {
-			return ctx, err
+			return "", ctx, err
 		}
 
 		if resp.StatusCode() != http.StatusOK {
-			return ctx, fmt.Errorf("%w, got: %d", Non200StatusErr, resp.StatusCode())
+			return "", ctx, fmt.Errorf("%w, got: %d", Non200StatusErr, resp.StatusCode())
 		}
 
 		downloadLink, err = extractDownloadLink(resp)
 		if err != nil {
-			return ctx, err
+			return "", ctx, err
 		}
 	}
 
@@ -66,10 +66,10 @@ func Process(ctx context.Context, client *resty.Client, url string) (context.Con
 
 // downloadAndSave downloads a file form the provided link and saves it under
 // the downloads(read from env var during start) directory
-func downloadAndSave(ctx context.Context, client *resty.Client, url string) (context.Context, error) {
+func downloadAndSave(ctx context.Context, client *resty.Client, url string) (string, context.Context, error) {
 	resp, err := client.R().Get(url)
 	if err != nil {
-		return ctx, err
+		return "", ctx, err
 	}
 	taskID := helper.GetIDFromContext(ctx).String()
 	slog.Info("Downloaded file from url", slog.String("url", url), slog.String("taskID", taskID))
@@ -96,21 +96,22 @@ func downloadAndSave(ctx context.Context, client *resty.Client, url string) (con
 		}
 	}
 
+	filename = strings.TrimSpace(filename) // trim the spaces
 	filePath := downloadDir + "/" + filename
 	out, err := os.Create(filePath)
 
 	if err != nil {
-		return ctx, fmt.Errorf("error while creating file, %w", err)
+		return "", ctx, fmt.Errorf("error while creating file, %w", err)
 	}
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		return ctx, fmt.Errorf("error while saving response, %w", err)
+		return "", ctx, fmt.Errorf("error while saving response, %w", err)
 	}
 
 	slog.Info("Saved file", slog.String("filepath", filePath), slog.String("taskID", taskID))
 	newCtx := helper.NewContextWithFilePath(ctx, filePath)
-	return newCtx, nil
+	return filename, newCtx, nil
 }
 
 // isAdsPage checks if the given urls if an ads page (not advertisement, more like file description)
