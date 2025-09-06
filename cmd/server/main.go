@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"fmt"
 	"html/template"
-	"log"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
+	"sync"
 
 	"github.com/joho/godotenv"
 	"github.com/roshanlc/send-to-kindle/config"
@@ -78,12 +79,14 @@ func main() {
 		return
 	}
 
+	q := queue.NewTaskQueue()
+
 	// start the server
 	svr := server.Server{
 		Config:    &config,
 		DB:        db,
 		Templates: templates,
-		TaskQueue: *queue.NewTaskQueue(),
+		TaskQueue: q,
 	}
 
 	err = svr.Verify()
@@ -92,7 +95,24 @@ func main() {
 		return
 	}
 
-	log.Println("Exiting...")
+	// run in waitgroup
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		slog.Info("spinned up a goroutine for server")
+
+		defer wg.Done()
+		svr.Start()
+	}()
+	go func() {
+		slog.Info("spinned up a goroutine for task queue processing")
+		defer wg.Done()
+		processTasks(&config, q, db)
+	}()
+
+	wg.Wait()
+	slog.Info("Exiting...")
 }
 
 func readConfig() (config.ServerConfig, error) {
@@ -113,6 +133,16 @@ func readConfig() (config.ServerConfig, error) {
 	config.SmtpFrom = os.Getenv("SMTPFROM")
 	config.ServerPort = os.Getenv("SERVERPORT")
 	config.DBPath = os.Getenv("DBPATH")
+	to := os.Getenv("SMTPTO")
+	var emails []string
+	if to != "" {
+		val := strings.Split(strings.TrimSpace(to), ",")
+		for _, v := range val {
+			emails = append(emails, strings.TrimSpace(v))
+		}
+	}
+
+	config.SmtpTo = emails
 
 	return config, nil
 }

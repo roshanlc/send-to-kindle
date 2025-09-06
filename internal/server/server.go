@@ -16,7 +16,7 @@ type Server struct {
 	Config    *config.ServerConfig // reference to a server configuration
 	DB        *database.DB         // reference to a db instance
 	Templates *template.Template   // templates
-	TaskQueue queue.TaskQueue      // Queue
+	TaskQueue *queue.TaskQueue     // Queue
 	mux       *http.ServeMux       // multiplexer
 }
 
@@ -91,6 +91,9 @@ func (s *Server) Start() {
 
 	slog.Info("starting server...", slog.String("port", s.Config.ServerPort))
 	// start the server
-	http.ListenAndServe(s.Config.ServerPort, s.mux)
-	slog.Info("server started", slog.String("port", s.Config.ServerPort))
+	err := http.ListenAndServe(":"+s.Config.ServerPort, s.mux)
+	if err != nil {
+		slog.Error("error while starting server", slog.String("error", err.Error()))
+		return
+	}
 }

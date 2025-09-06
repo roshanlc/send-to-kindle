@@ -7,6 +7,7 @@ import (
 
 // HomeHandler serves the homepage (dashboard)
 func (s *Server) HomeHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 	err := s.Templates.ExecuteTemplate(w, Pages["HomePage"], map[string]any{
 		// values go here (key : val)
 	})
@@ -15,5 +16,4 @@ func (s *Server) HomeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, InternalServerError, http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 }
