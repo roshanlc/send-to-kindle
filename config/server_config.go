@@ -12,6 +12,7 @@ type ServerConfig struct {
 	SmtpFrom     string
 	SmtpUserID   string
 	SmtpPassword string
+	SmtpTo       []string
 	ServerPort   string
 	DBPath       string // location to store sqlite db
 }
