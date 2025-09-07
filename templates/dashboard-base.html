@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>HTMX Dashboard</title>
+  <title>Send-to-Kindle</title>
   <link rel="icon" type="image/x-icon"
     href="https://raw.githubusercontent.com/roshanlc/roshanlc.github.io/master/static/favicon.ico">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -86,19 +86,23 @@
       margin-top: 1rem;
     }
 
-    /* History section */
-    .history {
-      grid-area: history;
-      overflow-x: auto;
-      /* ✅ table scrolls on small screens */
-    }
-
     table {
       font-family: Arial, Helvetica, sans-serif;
       border-collapse: collapse;
       width: 100%;
-      min-width: 500px;
-      /* ✅ prevents squishing too much */
+      /* remove min-width */
+    }
+
+
+    .history {
+      overflow-x: auto;
+    }
+
+    @media (min-width: 768px) {
+      .history {
+        overflow-x: visible;
+        /* allow normal table layout */
+      }
     }
 
     td,

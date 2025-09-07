@@ -279,8 +279,8 @@ func (db *DB) DeleteCompletedTasks() error {
 	}
 	defer tx.Rollback()
 
-	query := `DELETE FROM tasks WHERE state = ?;`
-	_, err = tx.Exec(query, Completed)
+	query := `DELETE FROM tasks WHERE state IN (?,?);`
+	_, err = tx.Exec(query, Completed, Failed)
 
 	if err != nil {
 		return err
