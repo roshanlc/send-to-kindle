@@ -45,6 +45,14 @@ func process(config *Config, url string) {
 		slog.Error("process failed while sending email", slog.String("error", err.Error()))
 		return
 	}
+
+	path := helper.GetFilepathFromContext(ctx)
+	slog.Info("attempting to deleted downloaded file", slog.String("filepath", path))
+	err = downloader.DeleteDownloadedFile(path)
+	if err != nil {
+		slog.Error("error while deleting downloaded file", slog.String("error", err.Error()), slog.String("filepath", path))
+	}
+
 	err = client.Close()
 	if err != nil {
 		slog.Error("process failed during http client closure", slog.String("error", err.Error()))
