@@ -114,6 +114,16 @@ func downloadAndSave(ctx context.Context, client *resty.Client, url string) (str
 	return filename, newCtx, nil
 }
 
+// deleteDownloadedFile deletes the download file
+func DeleteDownloadedFile(path string) error {
+	err := os.Remove(path)
+	if err != nil {
+		return err
+	}
+	slog.Info("Deleted file", slog.String("filepath", path))
+	return nil
+}
+
 // isAdsPage checks if the given urls if an ads page (not advertisement, more like file description)
 // which contains download link to file.
 // Example: https://libgen.li/ads.php?md5=7e5412b8ece1fe49f7bfbc6e5ab77809

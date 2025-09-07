@@ -69,11 +69,20 @@ func processTasks(config *config.ServerConfig, q *queue.TaskQueue, db *database.
 			continue
 		}
 
+		// update the status of task in DB
 		taskDB.State = database.Completed
 		err = db.UpdateTask(taskDB)
 		if err != nil {
 			slog.Error("process failed while updating task state to completion", slog.Any("taskID", task.ID.String()), slog.String("error", err.Error()))
 		}
 
+		// delete the file now
+		path := helper.GetFilepathFromContext(ctx)
+		slog.Info("attempting to deleted downloaded file", slog.Any("taskID", task.ID.String()), slog.String("filepath", path))
+		err = downloader.DeleteDownloadedFile(path)
+		if err != nil {
+			slog.Error("error while deleting downloaded file", slog.Any("taskID", task.ID.String()), slog.String("error", err.Error()),
+				slog.String("filepath", path))
+		}
 	}
 }
