@@ -86,7 +86,7 @@ func (s *Server) TaskAddHandler(w http.ResponseWriter, r *http.Request) {
 		err = s.DB.AddTask(database.Task{
 			ID:    taskID.String(),  // id of the task
 			URL:   u,                // url of task
-			State: database.Ongoing, // state of task
+			State: database.Pending, // state of task
 		})
 
 		var task queue.Task

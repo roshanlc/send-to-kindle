@@ -16,14 +16,15 @@ import (
 
 func processTasks(config *config.ServerConfig, q *queue.TaskQueue, db *database.DB) {
 	client := resty.New().
-		SetRetryCount(3).
-		SetTimeout(5 * time.Minute)
+		SetRetryCount(2).
+		SetTimeout(3 * time.Minute)
 
 	defer client.Close() // clean up
 
 	for {
 		task := q.Dequeue()
 		slog.Info("taking up task", slog.String("taskID", task.ID.String()))
+
 		ctx := helper.NewContextWithUUID(context.Background(), task.ID)
 		taskDB, err := db.GetTask(task.ID.String()) // get task item from db
 		// TODO: add failure state to task and maybe re-add to queue again ?? also how to handle error of failure state update
@@ -31,6 +32,12 @@ func processTasks(config *config.ServerConfig, q *queue.TaskQueue, db *database.
 			slog.Error("error occured while fetching task from db", slog.String("taskID", task.ID.String()), slog.String("error", err.Error()))
 			continue
 		}
+		taskDB.State = database.Ongoing
+		err = db.UpdateTask(taskDB)
+		if err != nil {
+			slog.Error("process failed while updating task state to ongoing", slog.Any("taskID", task.ID.String()), slog.String("error", err.Error()))
+		}
+
 		filename, ctx, err := downloader.Process(ctx, client, task.URL)
 
 		if err != nil {
@@ -38,10 +45,23 @@ func processTasks(config *config.ServerConfig, q *queue.TaskQueue, db *database.
 			continue
 		}
 
+		taskDB, err = db.GetTask(task.ID.String()) // get task item from db
+		if err != nil {
+			slog.Error("error occured while fetching task from db", slog.String("taskID", task.ID.String()), slog.String("error", err.Error()))
+			continue
+		}
 		taskDB.Title = filename
+		taskDB.State = database.Ongoing
 		err = db.UpdateTask(taskDB)
 		if err != nil {
 			slog.Error("process failed while updating task title", slog.Any("taskID", task.ID.String()), slog.String("error", err.Error()))
+		}
+
+		// fetch again
+		taskDB, err = db.GetTask(task.ID.String()) // get task item from db
+		if err != nil {
+			slog.Error("error occured while fetching task from db", slog.String("taskID", task.ID.String()), slog.String("error", err.Error()))
+			continue
 		}
 
 		slog.Info("attempting to email downloaded file", slog.Any("taskID", task.ID.String()))
@@ -69,7 +89,6 @@ func processTasks(config *config.ServerConfig, q *queue.TaskQueue, db *database.
 			continue
 		}
 
-		// update the status of task in DB
 		taskDB.State = database.Completed
 		err = db.UpdateTask(taskDB)
 		if err != nil {
