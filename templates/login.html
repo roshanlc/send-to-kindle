@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #f8f9fa;
+    }
+
+    form {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 300px;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.5rem;
+      border: none;
+      border-radius: 5px;
+      background: #04AA6D;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #038d5e;
+    }
+
+    .error {
+      color: red;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+
+    h1 {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 500;
+      margin: 1.5rem 0;
+      padding: 2px;
+      /* color: #04AA6D; */
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+
+<body>
+
+  <form method="post">
+    <h1>Send-to-Kindle</h1>
+
+    {{ if . }}
+    <div class="error">{{.}}</div>
+    {{ end }}
+    <input type="text" name="username" placeholder="Username" required>
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+  </form>
+</body>
+
+</html>

@@ -171,14 +171,59 @@
     #clear-history-btn:hover {
       background: #c0392b;
     }
+
+    header.header {
+      max-width: 1200px;
+      /* match container */
+      margin: 0 auto 1rem auto;
+      display: flex;
+      justify-content: center;
+      /* center h1 */
+      align-items: center;
+      position: relative;
+      padding: 0 1rem;
+      /* consistent spacing */
+    }
+
+    header.header h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 0;
+      background: linear-gradient(90deg, #04AA6D, #2e7f9a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+    }
+
+    .logout-btn {
+      position: absolute;
+      right: 1rem;
+      /* ✅ keep aligned inside same max-width as container */
+      background: #bb626a;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .logout-btn:hover {
+      background: #c1121f;
+    }
   </style>
 
   <script src="https://unpkg.com/htmx.org@1.9.10/dist/htmx.min.js"></script>
 </head>
 
 <body>
+  <header class="header">
+    <h1>Send-to-Kindle</h1>
+    <button type="submit" class="logout-btn" hx-post="/logout" hx-confirm="Are you sure you want to logout?"
+      hx-trigger="click" hx-swap="none">Logout</button>
+  </header>
 
-  <h1>Send-to-Kindle</h1>
+
   <div class="container">
     <div class="submit">
       <section id="form-section">
@@ -190,7 +235,6 @@
       <div class="history-header">
         <h2>History</h2>
         <button id="clear-history-btn" hx-delete="/history/clear" hx-target="#result-box" hx-swap="innerHTML"
-          hx-confirm="Are you sure you want to clear all history?"
           hx-on::after-request="htmx.ajax('GET', '/history', {target:'#history-table'})">
           Clear History
         </button>

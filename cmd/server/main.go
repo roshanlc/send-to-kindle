@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/rand"
 	"database/sql"
 	"fmt"
 	"html/template"
@@ -12,6 +11,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 	"github.com/roshanlc/send-to-kindle/config"
 	"github.com/roshanlc/send-to-kindle/internal/database"
@@ -74,21 +74,19 @@ func main() {
 
 	}
 
-	key := make([]byte, 32)
-	_, err = rand.Read(key)
-	if err != nil {
-		slog.Error("error while generating random key", slog.String("error", err.Error()))
-		return
-	}
-
+	// task queue
 	q := queue.NewTaskQueue()
+
+	// cookie store
+	store := sessions.NewCookieStore([]byte(config.SecretKey))
 
 	// start the server
 	svr := server.Server{
-		Config:    &config,
-		DB:        db,
-		Templates: templates,
-		TaskQueue: q,
+		Config:      &config,
+		DB:          db,
+		Templates:   templates,
+		TaskQueue:   q,
+		CookieStore: store,
 	}
 
 	err = svr.Verify()
@@ -150,12 +148,15 @@ func readConfig() (config.ServerConfig, error) {
 		return config, err
 	}
 	config.SmtpPort = smtpPort
-	config.SmtpUserID = os.Getenv("USERID")
-	config.SmtpPassword = os.Getenv("PASSWORD")
+	config.SmtpUserID = os.Getenv("SMTPUSERID")
+	config.SmtpPassword = os.Getenv("SMTPPASSWORD")
 	config.SmtpFrom = os.Getenv("SMTPFROM")
 	config.ServerPort = os.Getenv("SERVERPORT")
 	config.DBPath = os.Getenv("DBPATH")
 	config.STOREPATH = os.Getenv("STOREPATH")
+	config.Username = os.Getenv("USERNAME")
+	config.Password = os.Getenv("PASSWORD")
+	config.SecretKey = os.Getenv("SECRETKEY")
 
 	to := os.Getenv("SMTPTO")
 	var emails []string

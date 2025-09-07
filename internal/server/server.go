@@ -7,17 +7,19 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/gorilla/sessions"
 	"github.com/roshanlc/send-to-kindle/config"
 	"github.com/roshanlc/send-to-kindle/internal/database"
 	"github.com/roshanlc/send-to-kindle/internal/queue"
 )
 
 type Server struct {
-	Config    *config.ServerConfig // reference to a server configuration
-	DB        *database.DB         // reference to a db instance
-	Templates *template.Template   // templates
-	TaskQueue *queue.TaskQueue     // Queue
-	mux       *http.ServeMux       // multiplexer
+	Config      *config.ServerConfig  // reference to a server configuration
+	DB          *database.DB          // reference to a db instance
+	Templates   *template.Template    // templates
+	TaskQueue   *queue.TaskQueue      // Queue
+	mux         *http.ServeMux        // multiplexer
+	CookieStore *sessions.CookieStore // cookie store
 }
 
 // NOTE: These should be corresponding to the files under templales folder
@@ -26,6 +28,7 @@ var Pages = map[string]string{
 	"HistoryPage":      "history.html",
 	"SubmitPage":       "submit-form.html",
 	"SubmitResultPage": "submit-result.html",
+	"LoginPage":        "login.html",
 }
 
 const (
@@ -69,10 +72,13 @@ func (s *Server) setupRouter() {
 	mux := http.NewServeMux()
 	// setup routes
 
-	mux.HandleFunc("GET /", s.HomeHandler)
-	mux.HandleFunc("GET /history", s.TaskListHandler)
-	mux.HandleFunc("POST /submit", s.TaskAddHandler)
-	mux.HandleFunc("DELETE /history/clear", s.TaskRemoveCompletedHandler)
+	mux.HandleFunc("POST /login", s.panicMiddleware(s.authMiddleware(s.LoginHandler)))
+	mux.HandleFunc("GET /login", s.panicMiddleware(s.authMiddleware(s.ShowLoginPageHandler)))
+	mux.HandleFunc("POST /logout", s.panicMiddleware(s.authMiddleware(s.LogoutHandler)))
+	mux.HandleFunc("GET /", s.panicMiddleware(s.authMiddleware(s.HomeHandler)))
+	mux.HandleFunc("GET /history", s.panicMiddleware(s.authMiddleware(s.TaskListHandler)))
+	mux.HandleFunc("POST /submit", s.panicMiddleware(s.authMiddleware(s.TaskAddHandler)))
+	mux.HandleFunc("DELETE /history/clear", s.panicMiddleware(s.authMiddleware(s.TaskRemoveCompletedHandler)))
 
 	s.mux = mux
 }
