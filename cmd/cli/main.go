@@ -17,8 +17,8 @@ type Config struct {
 	Port         int      `yaml:"PORT"`
 	From         string   `yaml:"FROM"`
 	To           []string `yaml:"TO"`
-	User         string   `yaml:"USERID"`
-	Password     string   `yaml:"PASSWORD"`
+	User         string   `yaml:"SMTPUSERID"`
+	Password     string   `yaml:"SMTPPASSWORD"`
 	DownloadsDir string   `yaml:"DOWNLOADSDIR"`
 }
 

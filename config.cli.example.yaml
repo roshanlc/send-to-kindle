@@ -1,0 +1,7 @@
+HOST: # host of smtp server
+PORT: # port of smtp server
+FROM: # send email from
+TO: # Array of receipeints [a,b[]
+SMTPUSERID: # username of smtp server
+SMTPPASSWORD: # password of smtp server
+DOWNLOADSDIR: # PATH To store downloaded files
