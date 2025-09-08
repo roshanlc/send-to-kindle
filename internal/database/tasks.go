@@ -214,14 +214,23 @@ func (db *DB) UpdateTask(task Task) error {
 }
 
 // ListTask retrieve tasks from db
-func (db *DB) ListTask(state TaskState) ([]Task, error) {
+func (db *DB) ListTask(state []TaskState) ([]Task, error) {
 	var query string
-	if state == "" {
+	var args []any
+	if len(state) == 0 {
 		query = `SELECT id,user_id,url,title,state,error_message,added_at,updated_at FROM tasks ORDER BY added_at DESC;`
 	} else {
-		query = `SELECT id,user_id,url,title,state,error_message,added_at,updated_at FROM tasks WHERE state = ? ORDER BY added_at DESC;`
+		tmp := make([]string, 0, len(state))
+		for _, s := range state {
+			tmp = append(tmp, "?")
+			args = append(args, string(s))
+		}
+
+		query = fmt.Sprintf(
+			`SELECT id,user_id,url,title,state,error_message,added_at,updated_at FROM tasks WHERE state IN (%s) ORDER BY added_at DESC;`,
+			strings.Join(tmp, ","))
 	}
-	result, err := db.Database.Query(query, state)
+	result, err := db.Database.Query(query, args...)
 
 	if err != nil {
 		return nil, err

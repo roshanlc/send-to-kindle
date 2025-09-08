@@ -32,6 +32,13 @@ func processTasks(config *config.ServerConfig, q *queue.TaskQueue, db *database.
 			slog.Error("error occured while fetching task from db", slog.String("taskID", task.ID.String()), slog.String("error", err.Error()))
 			continue
 		}
+
+		// skip the task if the state is not pending
+		if taskDB.State != database.Pending {
+			slog.Info("task skipped as it was not pending", slog.String("taskID", task.ID.String()))
+			continue
+		}
+
 		taskDB.State = database.Ongoing
 		err = db.UpdateTask(taskDB)
 		if err != nil {
@@ -82,6 +89,7 @@ func processTasks(config *config.ServerConfig, q *queue.TaskQueue, db *database.
 		if err != nil {
 			slog.Error("process failed while sending email", slog.Any("taskID", task.ID.String()), slog.String("error", err.Error()))
 			taskDB.State = database.Failed
+			taskDB.ErrorMsg = err.Error()
 			err := db.UpdateTask(taskDB)
 			if err != nil {
 				slog.Error("process failed while updating task state to failure", slog.Any("taskID", task.ID.String()), slog.String("error", err.Error()))

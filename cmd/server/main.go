@@ -99,9 +99,9 @@ func main() {
 	downloader.SetDownloadDirectory(config.STOREPATH)
 
 	// fetch ongoing tasks from db and add to queue (remaining ones from last run)
-	tasks, err := db.ListTask(database.Ongoing)
+	tasks, err := db.ListTask([]database.TaskState{database.Pending, database.Ongoing})
 	if err != nil {
-		slog.Error("error while fetching ongoing tasks from db", slog.String("error", err.Error()))
+		slog.Error("error while fetching pending and ongoing tasks from db", slog.String("error", err.Error()))
 		slog.Warn("skipping adding leftover tasks due to error")
 	} else {
 		fmt.Println("leftover tasks:", tasks)
@@ -110,6 +110,11 @@ func main() {
 	for _, t := range tasks {
 		u, err := helper.GetUUIDFromID(t.ID)
 		if err == nil {
+			// update corresponding taks status in db
+			_ = db.UpdateTask(database.Task{
+				ID:    t.ID,
+				State: database.Pending,
+			})
 			ta := queue.NewTask(u, t.URL)
 			q.Enqueue(ta)
 		}

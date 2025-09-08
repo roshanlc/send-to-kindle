@@ -79,6 +79,7 @@ func (s *Server) setupRouter() {
 	mux.HandleFunc("GET /history", s.panicMiddleware(s.authMiddleware(s.TaskListHandler)))
 	mux.HandleFunc("POST /submit", s.panicMiddleware(s.authMiddleware(s.TaskAddHandler)))
 	mux.HandleFunc("DELETE /history/clear", s.panicMiddleware(s.authMiddleware(s.TaskRemoveCompletedHandler)))
+	mux.HandleFunc("POST /tasks/{id}", s.panicMiddleware(s.authMiddleware(s.TaskCancelHandler)))
 
 	s.mux = mux
 }

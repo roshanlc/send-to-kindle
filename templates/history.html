@@ -15,7 +15,18 @@
       <td>{{.ID}}</td>
       <td>{{ .URL }}</td>
       <td>{{ .Title }}</td>
-      <td>{{ .State }}</td>
+      <td>
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+
+          {{ .State }}
+          {{ if eq .State "pending" }}
+          <button type="submit" class="clear-history-btn" hx-post="/tasks/{{ .ID }}"
+            hx-confirm="Are you sure you want to cancel the task {{ .ID }}?" hx-trigger="click" hx-target="#result-box"
+            hx-swap="innerHTML"
+            hx-on::after-request="htmx.ajax('GET', '/history', {target:'#history-table'})">Cancel</button>
+          {{ end }}
+        </div>
+      </td>
       <td>{{ .AddedAt.Format "2006-01-02 15:04:05" }}</td>
     </tr>
     {{ else }}

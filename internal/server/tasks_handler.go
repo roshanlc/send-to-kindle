@@ -16,7 +16,7 @@ func (s *Server) TaskListHandler(w http.ResponseWriter, r *http.Request) {
 
 	var tasks []database.Task
 	// data from history
-	tasks, err := s.DB.ListTask("")
+	tasks, err := s.DB.ListTask([]database.TaskState{})
 
 	if err != nil {
 		slog.Error("error while fetching tasks list", slog.String("error", err.Error()))
@@ -132,4 +132,42 @@ func (s *Server) TaskRemoveCompletedHandler(w http.ResponseWriter, r *http.Reque
 
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Task executed successfully."))
+}
+
+// TaskAddHandler cancels a pending task
+func (s *Server) TaskCancelHandler(w http.ResponseWriter, r *http.Request) {
+
+	taskID := strings.TrimSpace(r.PathValue("id"))
+	if taskID == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("please provide a valid taskID"))
+		return
+	}
+
+	t, err := s.DB.GetTask(taskID)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("please provide a valid taskID"))
+		return
+	}
+
+	if t.State != database.Pending {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("please provide a valid taskID"))
+		return
+	}
+
+	t.State = database.Failed
+	t.ErrorMsg = "Task cancelled by user"
+
+	err = s.DB.UpdateTask(t)
+	if err != nil {
+		slog.Error("error while updating task status to cancelled(failed)", slog.String("taskID", taskID))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("something went wrong"))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Task cancelled successfully."))
 }
